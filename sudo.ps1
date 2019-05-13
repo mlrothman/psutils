@@ -22,8 +22,8 @@ function sudo_do($parent_pid, $dir, $cmd) {
 	$kernel::attachconsole($parent_pid)
 		
 	$p = new-object diagnostics.process; $start = $p.startinfo
-	$start.filename = "powershell.exe"
-	$start.arguments = "-noprofile $cmd`nexit `$lastexitcode"
+	$start.filename = (Get-Process -id $parent_pid).path
+	$start.arguments = "-noprofile -Command $cmd`nexit `$lastexitcode"
 	$start.useshellexecute = $false
 	$start.workingdirectory = $dir
 	$p.start()
@@ -61,9 +61,10 @@ $wd = serialize (convert-path $pwd) # convert-path in case pwd is a PSDrive
 
 $savetitle = $host.ui.rawui.windowtitle
 $p = new-object diagnostics.process; $start = $p.startinfo
-$start.filename = "powershell.exe"
-$start.arguments = "-noprofile & '$pscommandpath' -do $wd $pid $a`nexit `$lastexitcode"
+$start.filename = (Get-Process -id $pid).path
+$start.arguments = "-noprofile -Command & '$pscommandpath' -do $wd $pid $a`nexit `$lastexitcode"
 $start.verb = 'runas'
+$start.UseShellExecute = $true
 $start.windowstyle = 'hidden'
 try { $null = $p.start() }
 catch { exit 1 } # user didn't provide consent
